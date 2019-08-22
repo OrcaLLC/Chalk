@@ -6,8 +6,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 const carbonHostname = "https://api.carbonintensity.org.uk/intensity"
@@ -17,6 +15,13 @@ var _ APINoise = (*Carbon)(nil)
 // Carbon encapsulates an API call to get the current carbon intensity in England
 type Carbon struct {
 	client *http.Client
+}
+
+// NewCarbon ...
+func NewCarbon(c *http.Client) *Carbon {
+	return &Carbon{
+		client: c,
+	}
 }
 
 // CarbonData is just a wrapper
@@ -46,9 +51,7 @@ func (c *Carbon) Call() *Noise {
 		return nil
 	}
 
-	spew.Dump(r)
-
-	n.Contribution = reduceInt(c.ProcessCarbon(r))
+	n.Contribution = simpleReduceInteger(c.ProcessCarbon(r))
 
 	return n
 }
@@ -108,21 +111,7 @@ func turnIndexIntoNumber(index string) (int, error) {
 	n2f := math.Float64frombits(n2)
 
 	f1 := math.Abs(math.Log(n2f))
-	f := int(reduceIndex(f1))
+	f := int(simpleReduceIndex(f1))
 
 	return f, nil
-}
-
-func reduceIndex(f float64) float64 {
-	for f > 9.0 || f <= 0.0 {
-		f = f / 2
-	}
-	return f
-}
-
-func reduceInt(i int) int {
-	for i > 9 || i < 0 {
-		i = i / 2
-	}
-	return i
 }
